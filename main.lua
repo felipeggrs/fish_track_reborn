@@ -4,7 +4,7 @@ local fish_track = {
 	name = "fish_track_reborn",
 	author = "Wagasez",
 	version = "1.0",
-	desc = "Track Buff For Fishing"
+	desc = "Track Buff For Fishing. Inspired by Usb's work."
 }
 
 local fishBuffIdsToAlert = {
