@@ -39,7 +39,7 @@ local previousXYZ = "0,0,0"
 local previousFish
 local settings
 
-local MARKED_FISH_TIMER = 180000
+local MARKED_FISH_TIMER = 150000
 local markedFishData = {}
 local markedFishUI = {}
 
