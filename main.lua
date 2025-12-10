@@ -25,10 +25,16 @@ local actionBuffs = {
 }
 
 local fishNamesToAlert = {
+	-- English
 	["Marlin"] = true, ["Blue Marlin"] = true, ["Tuna"] = true, ["Blue Tuna"] = true, ["Bluefin Tuna"] = true, ["Sunfish"] = true,
 	["Sailfish"] = true, ["Sturgeon"] = true, ["Pink Pufferfish"] = true,
 	["Carp"] = true, ["Arowana"] = true, ["Pufferfish"] = true, ["Eel"] = true,
-	["Pink Marlin"] = true, ["Treasure Mimic"] = true
+	["Pink Marlin"] = true, ["Treasure Mimic"] = true,
+	-- Korean
+	["철갑상어"] = true,  -- Sturgeon
+	["청새치"] = true,  -- Blue Marlin
+	["참다랑어"] = true,  -- Tuna
+	["돛새치"] = true,  -- Sailfish
 }
 
 local fishTrackerCanvas, fishBuffAlertCanvas, fishBuffAlertLabel, fishBuffAlertIcon, fishBuffTimeLeftLabel, targetFishIcon
@@ -42,6 +48,9 @@ local settings
 local MARKED_FISH_TIMER = 150000
 local markedFishData = {}
 local markedFishUI = {}
+
+local DEBUG_MODE = true  -- Set to true to log target unit info
+local lastLoggedFishId = nil
 
 local function OnUpdate(dt)
     local currentTime = api.Time:GetUiMsec()
@@ -97,8 +106,21 @@ local function OnUpdate(dt)
 
     local currentFish = api.Unit:GetUnitId("target")
     local currentFishName
+    local currentFishInfo
     if (currentFish ~= nil) then
-        currentFishName = api.Unit:GetUnitInfoById(currentFish).name
+        currentFishInfo = api.Unit:GetUnitInfoById(currentFish)
+        currentFishName = currentFishInfo.name
+
+        -- Debug: Log target name to file for collecting fish names
+        if DEBUG_MODE and currentFish ~= lastLoggedFishId then
+            lastLoggedFishId = currentFish
+            local logData = api.File:Read("fish_track_reborn/debug_log.lua") or {names = {}}
+            logData.names[currentFishName] = true
+            api.File:Write("fish_track_reborn/debug_log.lua", logData)
+            api.Log:Info("[FishTrack] Logged: " .. tostring(currentFishName))
+        end
+    else
+        lastLoggedFishId = nil
     end
 
     local x, y, z = api.Unit:GetUnitScreenPosition("target")

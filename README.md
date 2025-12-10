@@ -19,3 +19,5 @@ Reviving the work of Usb in the original Fish Track addon, but better than ever.
 1. Target a fish to see buff icons and timers below it
 2. Use in-game markers (1-6) on fish you want to track after death.
 3. When a marked fish dies, target it once to start the death timer.
+
+** Now suports Korean client for: 철갑상어; 청새치; 참다랑어; 돛새치; Special thanks to @Lightning
