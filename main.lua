@@ -49,7 +49,7 @@ local MARKED_FISH_TIMER = 150000
 local markedFishData = {}
 local markedFishUI = {}
 
-local DEBUG_MODE = true  -- Set to true to log target unit info
+local DEBUG_MODE = false  -- Set to true to log target unit info
 local lastLoggedFishId = nil
 
 local function OnUpdate(dt)
