@@ -3,7 +3,7 @@ local api = require("api")
 local fish_track = {
 	name = "fish_track_reborn",
 	author = "Wagasez",
-	version = "1.0",
+	version = "1.4",
 	desc = "Track Buff For Fishing. Inspired by Usb's work."
 }
 
