@@ -3,7 +3,7 @@ local api = require("api")
 local fish_track = {
 	name = "fish_track_reborn",
 	author = "Wagasez",
-	version = "1.4",
+	version = "2.0",
 	desc = "Track Buff For Fishing. Inspired by Usb's work."
 }
 
@@ -49,13 +49,17 @@ local MARKED_FISH_TIMER = 150000
 local markedFishData = {}
 local markedFishUI = {}
 
-local DEBUG_MODE = false  -- Set to true to log target unit info
+local DEBUG_MODE = false
 local lastLoggedFishId = nil
+
+local OWNERS_MARK_BUFF_ID = 4867
+local boatOwnerMarkData = nil
+local boatOwnerMarkUI = nil
 
 local function OnUpdate(dt)
     local currentTime = api.Time:GetUiMsec()
 
-    for markerIndex = 1, 6 do
+    for markerIndex = 1, 9 do
         local markerUnitId = api.Unit:GetOverHeadMarkerUnitId(markerIndex)
 
         if markerUnitId ~= nil then
@@ -81,7 +85,7 @@ local function OnUpdate(dt)
     end
 
     local activeTimerCount = 0
-    for markerIndex = 1, 6 do
+    for markerIndex = 1, 9 do
         local data = markedFishData[markerIndex]
         local ui = markedFishUI[markerIndex]
 
@@ -91,6 +95,7 @@ local function OnUpdate(dt)
 
             if remaining > 0 then
                 local xOffset = (activeTimerCount * 50) - 125
+                ui.canvas:RemoveAllAnchors()
                 ui.canvas:AddAnchor("TOP", "UIParent", "CENTER", xOffset, 200)
                 ui.canvas:Show(true)
                 F_SLOT.SetIconBackGround(ui.icon, api.Ability:GetBuffTooltip(4832, 1).path)
@@ -104,6 +109,20 @@ local function OnUpdate(dt)
         end
     end
 
+    if boatOwnerMarkData ~= nil and boatOwnerMarkUI ~= nil then
+        local remaining = boatOwnerMarkData.expirationTime - currentTime
+        if remaining > 0 then
+            local xOffset = (activeTimerCount * 50) - 125
+            boatOwnerMarkUI.canvas:RemoveAllAnchors()
+            boatOwnerMarkUI.canvas:AddAnchor("TOP", "UIParent", "CENTER", xOffset, 200)
+            boatOwnerMarkUI.canvas:Show(true)
+            boatOwnerMarkUI.timeLabel:SetText(string.format("%.0fs", remaining / 1000))
+        else
+            boatOwnerMarkUI.canvas:Show(false)
+            boatOwnerMarkData = nil
+        end
+    end
+
     local currentFish = api.Unit:GetUnitId("target")
     local currentFishName
     local currentFishInfo
@@ -111,7 +130,6 @@ local function OnUpdate(dt)
         currentFishInfo = api.Unit:GetUnitInfoById(currentFish)
         currentFishName = currentFishInfo.name
 
-        -- Debug: Log target name to file for collecting fish names
         if DEBUG_MODE and currentFish ~= lastLoggedFishId then
             lastLoggedFishId = currentFish
             local logData = api.File:Read("fish_track_reborn/debug_log.lua") or {names = {}}
@@ -153,7 +171,7 @@ local function OnUpdate(dt)
         F_SLOT.SetIconBackGround(targetFishIcon, api.Ability:GetBuffTooltip(4832, 1).path)
         fishBuffTimeLeftLabel:SetText("")
 
-        for markerIndex = 1, 6 do
+        for markerIndex = 1, 9 do
             local data = markedFishData[markerIndex]
             if data ~= nil and data.unitId == currentFish and data.deathTime == nil then
                 data.deathTime = api.Time:GetUiMsec()
@@ -175,15 +193,19 @@ local function OnUpdate(dt)
 
     local actionBuff = nil
     local strengthContestBuff = nil
+    local ownersMarkBuff = nil
 
     for i = 1, buffCount do
         local buff = api.Unit:UnitBuff("target", i)
-        if buff ~= nil and fishBuffIdsToAlert[buff.buff_id] ~= nil then
-            if actionBuffs[buff.buff_id] then
-                actionBuff = buff
-                break
-            elseif buff.buff_id == 5715 then
-                strengthContestBuff = buff
+        if buff ~= nil then
+            if buff.buff_id == OWNERS_MARK_BUFF_ID then
+                ownersMarkBuff = buff
+            elseif fishBuffIdsToAlert[buff.buff_id] ~= nil then
+                if actionBuffs[buff.buff_id] then
+                    actionBuff = buff
+                elseif buff.buff_id == 5715 then
+                    strengthContestBuff = buff
+                end
             end
         end
     end
@@ -234,6 +256,26 @@ local function OnUpdate(dt)
     else
         if strengthContestIcon ~= nil then
             strengthContestIcon:Show(false)
+        end
+    end
+
+    if ownersMarkBuff ~= nil then
+        local isOwnBoat = false
+        local targetInfo = api.Unit:GetUnitInfoById(currentFish)
+        local playerInfo = api.Unit:GetUnitInfoById(api.Unit:GetUnitId("player"))
+
+        if targetInfo and playerInfo then
+            if targetInfo.owner_name and targetInfo.owner_name == playerInfo.name then
+                isOwnBoat = true
+            end
+        end
+
+        if isOwnBoat then
+            local expirationTime = currentTime + ownersMarkBuff.timeLeft
+            boatOwnerMarkData = { expirationTime = expirationTime }
+            if boatOwnerMarkUI ~= nil then
+                F_SLOT.SetIconBackGround(boatOwnerMarkUI.icon, api.Ability:GetBuffTooltip(OWNERS_MARK_BUFF_ID, 1).path)
+            end
         end
     end
 
@@ -304,7 +346,7 @@ local function OnLoad()
 	strengthContestTimeLabel.style:SetShadow(true)
 	strengthContestTimeLabel.style:SetColor(1, 1, 0, 1)
 
-	for i = 1, 6 do
+	for i = 1, 9 do
 		local canvas = api.Interface:CreateEmptyWindow("markedFishTarget" .. i)
 		canvas:Show(false)
 
@@ -337,6 +379,37 @@ local function OnLoad()
 		}
 	end
 
+	local boatCanvas = api.Interface:CreateEmptyWindow("boatOwnerMarkTarget")
+	boatCanvas:Show(false)
+
+	local boatIcon = CreateItemIconButton("boatOwnerMarkIcon", boatCanvas)
+	boatIcon:AddAnchor("TOPLEFT", boatCanvas, "TOPLEFT", 0, 0)
+	boatIcon:Show(true)
+	F_SLOT.ApplySlotSkin(boatIcon, boatIcon.back, SLOT_STYLE.DEFAULT)
+
+	local boatMarkerLabel = boatCanvas:CreateChildWidget("label", "boatOwnerMarkMarkerLabel", 0, true)
+	boatMarkerLabel:SetText("")
+	boatMarkerLabel:AddAnchor("BOTTOM", boatIcon, "TOP", 0, 2)
+	boatMarkerLabel.style:SetFontSize(14)
+	boatMarkerLabel.style:SetAlign(ALIGN_CENTER)
+	boatMarkerLabel.style:SetShadow(true)
+	boatMarkerLabel.style:SetColor(0.3, 0.6, 1, 1)
+
+	local boatTimeLabel = boatCanvas:CreateChildWidget("label", "boatOwnerMarkTimeLabel", 0, true)
+	boatTimeLabel:SetText("")
+	boatTimeLabel:AddAnchor("TOP", boatIcon, "BOTTOM", 0, 2)
+	boatTimeLabel.style:SetFontSize(18)
+	boatTimeLabel.style:SetAlign(ALIGN_CENTER)
+	boatTimeLabel.style:SetShadow(true)
+	boatTimeLabel.style:SetColor(0.3, 0.6, 1, 1)
+
+	boatOwnerMarkUI = {
+		canvas = boatCanvas,
+		icon = boatIcon,
+		timeLabel = boatTimeLabel,
+		markerLabel = boatMarkerLabel
+	}
+
 	api.On("UPDATE", OnUpdate)
 end
 
@@ -349,7 +422,7 @@ local function OnUnload()
 		fishTrackerCanvas:Show(false)
 		fishTrackerCanvas = nil
 	end
-	for i = 1, 6 do
+	for i = 1, 9 do
 		if markedFishUI[i] ~= nil and markedFishUI[i].canvas ~= nil then
 			markedFishUI[i].canvas:Show(false)
 			markedFishUI[i].canvas = nil
@@ -357,6 +430,12 @@ local function OnUnload()
 	end
 	markedFishUI = {}
 	markedFishData = {}
+	if boatOwnerMarkUI ~= nil and boatOwnerMarkUI.canvas ~= nil then
+		boatOwnerMarkUI.canvas:Show(false)
+		boatOwnerMarkUI.canvas = nil
+	end
+	boatOwnerMarkUI = nil
+	boatOwnerMarkData = nil
 end
 
 fish_track.OnLoad = OnLoad
