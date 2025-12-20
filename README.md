@@ -25,6 +25,9 @@ Reviving the work of Usb in the original Fish Track addon, but better than ever.
 
 ## Version History
 
+### v2.1
+- Added Chinese client support for: 鲟鱼, 枪鱼, 蓝鳍金枪鱼, 旗鱼, 翻车鱼 (Special thanks to @Karenn)
+
 ### v2.0
 - Added boat Owner's Mark timer tracking (only tracks your own boats)
 - Expanded marker support from 1-6 to 1-9

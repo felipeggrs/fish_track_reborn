@@ -3,7 +3,7 @@ local api = require("api")
 local fish_track = {
 	name = "fish_track_reborn",
 	author = "Wagasez",
-	version = "2.0",
+	version = "2.1",
 	desc = "Track Buff For Fishing. Inspired by Usb's work."
 }
 
@@ -35,6 +35,12 @@ local fishNamesToAlert = {
 	["청새치"] = true,  -- Blue Marlin
 	["참다랑어"] = true,  -- Tuna
 	["돛새치"] = true,  -- Sailfish
+	-- Chinese
+	["鲟鱼"] = true,  -- Sturgeon
+	["枪鱼"] = true,  -- Blue Marlin
+	["蓝鳍金枪鱼"] = true,  -- Bluefin Tuna
+	["旗鱼"] = true,  -- Sailfish
+	["翻车鱼"] = true,  -- Sunfish
 }
 
 local fishTrackerCanvas, fishBuffAlertCanvas, fishBuffAlertLabel, fishBuffAlertIcon, fishBuffTimeLeftLabel, targetFishIcon
