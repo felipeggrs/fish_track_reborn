@@ -3,7 +3,7 @@ local api = require("api")
 local fish_track = {
 	name = "fish_track_reborn",
 	author = "Wagasez",
-	version = "2.1",
+	version = "2.2",
 	desc = "Track Buff For Fishing. Inspired by Usb's work."
 }
 
@@ -35,6 +35,7 @@ local fishNamesToAlert = {
 	["청새치"] = true,  -- Blue Marlin
 	["참다랑어"] = true,  -- Tuna
 	["돛새치"] = true,  -- Sailfish
+	["개복치"] = true,  -- Sunfish
 	-- Chinese
 	["鲟鱼"] = true,  -- Sturgeon
 	["枪鱼"] = true,  -- Blue Marlin
@@ -303,6 +304,7 @@ local function OnLoad()
 		settings.ShowTimers = true
 		needsFirstSave = true
 	end
+
 	if (needsFirstSave == true) then
 		api.SaveSettings()
 	end
@@ -417,6 +419,7 @@ local function OnLoad()
 	}
 
 	api.On("UPDATE", OnUpdate)
+	api.Log:Info("[FishTrackReborn] v" .. fish_track.version .. " by Wagasez")
 end
 
 local function OnUnload()
